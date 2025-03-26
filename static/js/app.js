@@ -27,28 +27,20 @@ function buildMetadata(sample) {
 
 
 
-// function to build both charts
+// Function to build both charts
 function buildCharts(sample) {
   d3.json("https://static.bc-edx.com/data/dl-1-2/m14/lms/starter/samples.json").then((data) => {
-
     // Get the samples field
-    console.log(data);
     var samplesArray = data.samples;
-    console.log(samplesArray);
-
+    
     // Filter the samples for the object with the desired sample number
-
     var selectedIdSamples = samplesArray.filter(data => data.id == sample);
-    console.log(selectedIdSamples);
-
+    var firstSample = selectedIdSamples[0]; // Get the first (and should be only) sample that matches
+    
     // Get the otu_ids, otu_labels, and sample_values
     var otuIds = firstSample.otu_ids;
     var otuLabels = firstSample.otu_labels;
     var sampleValues = firstSample.sample_values;
-    console.log(otuIds);
-    console.log(otuLabels);
-    console.log(sampleValues);
-
 
     // Build a Bubble Chart
     var bubbleData = [{
@@ -62,7 +54,6 @@ function buildCharts(sample) {
         colorscale: "Earth"
       }
     }];
-    console.log(bubbleData);
 
 
     // Render the Bubble Chart
@@ -70,11 +61,10 @@ function buildCharts(sample) {
       title: 'Bacteria Cultures Per Sample',
       showlegend: false,
       xaxis: {title: "OTU ID", automargin: true},
-      yaxis: {automargin: true},
-      //margin: { t: 50, r: 50, l: 50, b: 50 },
+      yaxis: {title: "Number of Bacteria", automargin: true},
       hovermode: "closest"
     };
-    console.log(bubbleLayout);
+    
     Plotly.newPlot("bubble", bubbleData, bubbleLayout, {responsive: true});
 
     // For the Bar Chart, map the otu_ids to a list of strings for your yticks
@@ -82,12 +72,14 @@ function buildCharts(sample) {
     console.log(yticks);
     
 
-    // Build a Bar Chart
-    var barData = [{
-      x: sampleValues.slice(0,10).reverse(),
-      text: otuLabels.slice(0,10).reverse(),
-      type: "bar"
-    }];
+       // Build a Bar Chart
+       var barData = [{
+        x: sampleValues.slice(0,10).reverse(),
+        y: yticks,
+        text: otuLabels.slice(0,10).reverse(),
+        type: "bar",
+        orientation: 'h'
+      }];
     // Don't forget to slice and reverse the input data appropriately
 
 
@@ -120,8 +112,17 @@ function buildCharts(sample) {
 // Function to run on page load
 function init() {
   d3.json("https://static.bc-edx.com/data/dl-1-2/m14/lms/starter/samples.json").then((data) => {
-    var sampleNames = data.names;
+    
+    
+    // Use d3 to select the dropdown with id of `#selDataset`
+    var selector = d3.select("#selDataset");
     // Get the names field
+    var sampleNames = data.names;
+   
+    // Use the list of sample names to populate the select options
+    // Hint: Inside a loop, you will need to use d3 to append a new
+    // option for each sample name.
+    
     sampleNames.forEach((sample) => {
       selector
         .append("option")
@@ -129,19 +130,11 @@ function init() {
         .property("value", sample);
     });
 
-    // Use d3 to select the dropdown with id of `#selDataset`
-    var selector = d3.select("#selDataset");
-
-    // Use the list of sample names to populate the select options
-    // Hint: Inside a loop, you will need to use d3 to append a new
-    // option for each sample name.
-
-
     // Get the first sample from the list
-
+    var firstSample = sampleNames[0];
 
     // Build charts and metadata panel with the first sample
-    var firstSample = sampleNames[0];
+     
     buildCharts(firstSample);
     buildMetadata(firstSample);
   });
